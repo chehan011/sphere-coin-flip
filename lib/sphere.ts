@@ -33,7 +33,7 @@ export async function getSphere() {
 }
 
 export async function connectSphereWallet() {
-  return await autoConnect({
+  const result = await autoConnect({
     dapp: {
       name: "Coin Flip Arena",
       description: "A Coin Flip Arena built with Unicity Sphere",
@@ -52,4 +52,8 @@ export async function connectSphereWallet() {
       "balance:read",
     ],
   });
+
+  console.log("Sphere Connect result:", result);
+
+  return result; // <-- IMPORTANT
 }
