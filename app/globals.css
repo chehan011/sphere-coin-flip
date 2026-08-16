@@ -64,3 +64,29 @@ body {
 .coin-glow {
   filter: drop-shadow(0 0 20px gold);
 }
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.sphere-logo {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+
+.app-logo h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.app-logo p {
+  margin: 4px 0 0;
+  color: #8ea4c7;
+  font-size: 14px;
+}

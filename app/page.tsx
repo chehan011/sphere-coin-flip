@@ -185,13 +185,18 @@ setStreak(0);
 
         <div className="bg-slate-900 rounded-2xl shadow-xl p-8">
 
-          <h1 className="text-4xl font-bold text-center">
-            🪙 Coin Flip Arena
-          </h1>
+         <div className="app-logo">
+  <img
+    src="/sphere-logo.png"
+    alt="Sphere"
+    className="sphere-logo"
+  />
+  <div>
+    <h1>Coin Flip Arena</h1>
+    <p>Powered by Unicity Sphere</p>
+  </div>
+</div>
 
-          <p className="text-center text-gray-400 mt-2 mb-8">
-            Powered by Unicity Sphere
-          </p>
 
           <button
   onClick={connectWallet}
@@ -270,7 +275,6 @@ setStreak(0);
       Flipping...
     </p>
   )}
-
 </div>
 
           <div className="mt-8">
