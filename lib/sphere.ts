@@ -1,6 +1,7 @@
 import { Sphere } from "@unicitylabs/sphere-sdk";
 import { createBrowserProviders } from "@unicitylabs/sphere-sdk/impl/browser";
 import { createWalletApiProviders } from "@unicitylabs/sphere-sdk/impl/shared/wallet-api";
+import { autoConnect } from "@unicitylabs/sphere-sdk/connect/browser";
 
 let sphere: Sphere | null = null;
 
@@ -10,7 +11,7 @@ export async function getSphere() {
   const base = createBrowserProviders({
     network: "testnet2",
     oracle: {
-      apiKey: "sk_ddc3cfcc001e4a28ac3fad7407f99590",
+      apiKey: "YOUR_ORACLE_KEY",
     },
   });
 
@@ -29,4 +30,26 @@ export async function getSphere() {
   sphere = result.sphere;
 
   return sphere;
+}
+
+export async function connectSphereWallet() {
+  return await autoConnect({
+    dapp: {
+      name: "Coin Flip Arena",
+      description: "A Coin Flip Arena built with Unicity Sphere",
+      url: window.location.origin,
+    },
+
+    walletUrl: "https://sphere.unicity.network",
+
+    network: {
+      id: 4,
+      name: "testnet2",
+    },
+
+    permissions: [
+      "identity:read",
+      "balance:read",
+    ],
+  });
 }

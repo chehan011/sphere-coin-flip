@@ -1,5 +1,5 @@
 "use client";
-import { getSphere } from "@/lib/sphere";
+import { getSphere, connectSphereWallet } from "@/lib/sphere";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 
@@ -66,30 +66,27 @@ async function connectWallet() {
   setLoadingWallet(true);
 
   try {
-    const sphere = await getSphere();
+    const result = await connectSphereWallet();
 
-    const payments = (sphere as any)._payments;
-    const assets = payments.getBalance();
+    console.log("Sphere Connect result:", result);
+    console.log("Transport:", result.transport);
+    console.log("Connection:", result.connection);
+    console.log("Wallet identity:", result.connection.identity);
 
-    if (assets.length > 0) {
-      setBalance(Number(assets[0].totalAmount));
-    }
+    const identity = result.connection.identity;
 
-
-    const addresses = sphere.getActiveAddresses();
-
-    if (addresses.length > 0) {
-      setWalletAddress(addresses[0].addressId);
-      setConnected(true);
-
+    if (identity.directAddress) {
+      setWalletAddress(identity.directAddress);
     } else {
-      alert("No wallet address found.");
+      setWalletAddress(identity.chainPubkey);
     }
+
+    setConnected(true);
 
   } catch (err) {
-    console.error(err);
-    alert("Failed to connect wallet.");
-     } finally {
+    console.error("Sphere Connect failed:", err);
+    alert("Wallet connection was cancelled or failed.");
+  } finally {
     setLoadingWallet(false);
   }
 }
