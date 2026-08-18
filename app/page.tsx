@@ -179,22 +179,39 @@ setStreak(0);
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white flex justify-center py-10 px-4">
+    <main className="min-h-screen text-white flex justify-center py-10 px-4">
 
       <div className="w-full max-w-lg">
 
         <div className="bg-slate-900 rounded-2xl shadow-xl p-8">
 
-         <div className="app-logo">
-  <img
-    src="/sphere-logo.png"
-    alt="Sphere"
-    className="sphere-logo"
-  />
-  <div>
-    <h1>Coin Flip Arena</h1>
-    <p>Powered by Unicity Sphere</p>
+        <div className="mb-8 flex flex-col items-center text-center">
+  <div className="flex items-center justify-center gap-4">
+    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 p-2 shadow-lg ring-1 ring-white/20 backdrop-blur-sm">
+      <img
+        src="/sphere-logo.png"
+        alt="Unicity Sphere"
+        className="h-full w-full object-contain"
+      />
+    </div>
+
+    <div className="text-left">
+      <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+        Coin Flip Arena
+      </h1>
+
+      <p className="mt-1 text-sm font-medium text-cyan-300">
+        Powered by Unicity Sphere
+      </p>
+    </div>
   </div>
+
+  <div className="mt-5 h-px w-full bg-linear-to-r from-transparent via-cyan-400/40 to-transparent" />
+
+  <p className="mt-4 max-w-md text-sm leading-relaxed text-slate-300">
+    Choose your side, flip the coin, and test your luck on the Unicity
+    testnet.
+  </p>
 </div>
 
 
