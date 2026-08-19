@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Coin Flip Arena",
   description: "Coin Flip Arena powered by Unicity Sphere",
 };
