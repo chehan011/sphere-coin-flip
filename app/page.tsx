@@ -1,5 +1,9 @@
 "use client";
-import { getSphere, connectSphereWallet } from "@/lib/sphere";
+import {
+  getSphere,
+  connectSphereWallet,
+  disconnectSphereWallet,
+} from "@/lib/sphere";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 
@@ -18,7 +22,7 @@ export default function Home() {
   const winSound = useRef<HTMLAudioElement | null>(null);
   const [choice, setChoice] = useState<Choice | null>(null);
   const [bet, setBet] = useState("10");
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState(100);
   const [coin, setCoin] = useState("🪙");
   const [message, setMessage] = useState("");
   const [flipping, setFlipping] = useState(false);
@@ -37,6 +41,7 @@ useEffect(() => {
   if (saved) {
     const data = JSON.parse(saved);
 
+    setBalance(data.balance ?? 100);
     setWins(data.wins ?? 0);
     setLosses(data.losses ?? 0);
     setHistory(data.history ?? []);
@@ -52,12 +57,13 @@ useEffect(() => {
   localStorage.setItem(
     "coinflip-data",
     JSON.stringify({
+      balance,
       wins,
       losses,
       history,
     })
   );
-}, [wins, losses, history]);
+}, [balance, wins, losses, history]);
 
 
 async function connectWallet() {
@@ -84,6 +90,24 @@ async function connectWallet() {
   } catch (err) {
     console.error("Sphere Connect failed:", err);
     alert("Wallet connection was cancelled or failed.");
+  } finally {
+    setLoadingWallet(false);
+  }
+}
+
+async function disconnectWallet() {
+  setLoadingWallet(true);
+
+  try {
+    await disconnectSphereWallet();
+
+    setConnected(false);
+    setWalletAddress("");
+    setBalance(100);
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to disconnect wallet.");
   } finally {
     setLoadingWallet(false);
   }
@@ -227,16 +251,20 @@ function playGame() {
 </div>
 
 
-          <button
-  onClick={connectWallet}
-  disabled={loadingWallet || connected}
-  className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg py-3 font-semibold transition"
+  <button
+  onClick={connected ? disconnectWallet : connectWallet}
+  disabled={loadingWallet}
+  className={`w-full rounded-lg py-3 font-semibold transition ${
+    connected
+      ? "bg-red-600 hover:bg-red-700"
+      : "bg-blue-600 hover:bg-blue-700"
+  }`}
 >
   {loadingWallet
-  ? "Connecting..."
-  : connected
-  ? "🟢 Wallet Connected"
-  : "🔵 Connect Wallet"}
+    ? "Please wait..."
+    : connected
+    ? "🔴 Disconnect Wallet"
+    : "🔵 Connect Wallet"}
 </button>
 
 
@@ -364,13 +392,16 @@ function playGame() {
 </button>
 
           <button
-  onClick={() => {
-    setWins(0);
-    setLosses(0);
-    setHistory([]);
-    setMessage("");
-    localStorage.removeItem("coinflip-data");
-  }}
+onClick={() => {
+  setBalance(100);
+  setWins(0);
+  setLosses(0);
+  setHistory([]);
+  setStreak(0);
+  setBestStreak(0);
+  setMessage("");
+  localStorage.removeItem("coinflip-data");
+}}
   className="mt-3 w-full rounded-lg bg-red-600 py-3 font-bold hover:bg-red-700"
 >
   Reset Game
