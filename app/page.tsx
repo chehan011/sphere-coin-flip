@@ -18,7 +18,7 @@ export default function Home() {
   const winSound = useRef<HTMLAudioElement | null>(null);
   const [choice, setChoice] = useState<Choice | null>(null);
   const [bet, setBet] = useState("10");
-  const [balance, setBalance] = useState(100);
+  const [balance, setBalance] = useState(0);
   const [coin, setCoin] = useState("🪙");
   const [message, setMessage] = useState("");
   const [flipping, setFlipping] = useState(false);
@@ -37,7 +37,6 @@ useEffect(() => {
   if (saved) {
     const data = JSON.parse(saved);
 
-    setBalance(data.balance ?? 100);
     setWins(data.wins ?? 0);
     setLosses(data.losses ?? 0);
     setHistory(data.history ?? []);
@@ -53,13 +52,12 @@ useEffect(() => {
   localStorage.setItem(
     "coinflip-data",
     JSON.stringify({
-      balance,
       wins,
       losses,
       history,
     })
   );
-}, [balance, wins, losses, history]);
+}, [wins, losses, history]);
 
 
 async function connectWallet() {
@@ -96,87 +94,101 @@ async function refreshBalance() {
 
 }
 
-  function playGame() {
-    if (flipping) return;
+function playGame() {
+  if (flipping) return;
 
-    if (!choice) {
-      alert("Please choose Heads or Tails.");
-      return;
-    }
+  if (!connected) {
+    alert("Please connect your Sphere wallet first.");
+    return;
+  }
 
-    const betAmount = Number(bet);
+  if (!choice) {
+    alert("Please choose Heads or Tails.");
+    return;
+  }
 
-    if (betAmount <= 0) {
-      alert("Enter a valid bet amount.");
-      return;
-    }
+  const betAmount = Number(bet);
 
-    if (betAmount > balance) {
-      alert("Insufficient balance.");
-      return;
-    }
+  if (!Number.isFinite(betAmount) || betAmount <= 0) {
+    alert("Enter a valid game-points amount.");
+    return;
+  }
 
-    setFlipping(true);
-   if (flipSound.current) {
-  flipSound.current.pause();
-  flipSound.current.currentTime = 0;
-  flipSound.current.play();
-}
-    setMessage("");
+  if (betAmount > balance) {
+    alert("Insufficient game points.");
+    return;
+  }
 
-    const animation = setInterval(() => {
-      setCoin((prev) => (prev === "🪙" ? "⚪" : "🪙"));
-    }, 120);
+  setFlipping(true);
+  setMessage("");
 
-    setTimeout(() => {
-      clearInterval(animation);
+  if (flipSound.current) {
+    flipSound.current.pause();
+    flipSound.current.currentTime = 0;
+    void flipSound.current.play().catch(() => {});
+  }
 
-      const flip: Choice =
-        Math.random() < 0.5 ? "Heads" : "Tails";
+  const animation = setInterval(() => {
+    setCoin((prev) => (prev === "🪙" ? "⚪" : "🪙"));
+  }, 120);
 
-      const won = flip === choice;
+  setTimeout(() => {
+    clearInterval(animation);
 
-      setCoin(flip === "Heads" ? "🙂" : "🦅");
+    const flip: Choice =
+      Math.random() < 0.5 ? "Heads" : "Tails";
 
-      if (won) {
-        setBalance((b) => b + betAmount);
-        setWins((w) => w + 1);
+    const won = flip === choice;
 
+    setCoin(flip === "Heads" ? "🙂" : "🦅");
 
-setStreak((s) => {
-  const next = s + 1;
-  setBestStreak((best) => Math.max(best, next));
-  return next;
-});
+    if (won) {
+      setBalance((b) => b + betAmount);
+      setWins((w) => w + 1);
 
-if (winSound.current) {
-  winSound.current.pause();
-  winSound.current.currentTime = 0;
-  winSound.current.play();
-}
+      setStreak((s) => {
+        const next = s + 1;
 
-       setMessage(`🎉 ${flip}! You won ${betAmount} Test UCT!`);
-      } else {
-        setBalance((b) => b - betAmount);
-        setLosses((l) => l + 1);
-setStreak(0);
-       setMessage(`❌ ${flip}! You lost ${betAmount} Test UCT.`);
+        setBestStreak((best) =>
+          Math.max(best, next)
+        );
+
+        return next;
+      });
+
+      if (winSound.current) {
+        winSound.current.pause();
+        winSound.current.currentTime = 0;
+        void winSound.current.play().catch(() => {});
       }
 
-      setHistory((prev) => [
-        {
-          id: Date.now(),
-          choice,
-          result: flip,
-          bet: betAmount,
-          won,
-        },
-        ...prev,
-      ]);
+      setMessage(
+        `🎉 ${flip}! You won ${betAmount} game points!`
+      );
+    } else {
+      setBalance((b) => b - betAmount);
+      setLosses((l) => l + 1);
+      setStreak(0);
 
-      setFlipping(false);
-    }, 2000);
-  }
+      setMessage(
+        `❌ ${flip}! You lost ${betAmount} game points.`
+      );
+    }
+
+    setHistory((prev) => [
+      {
+        id: Date.now(),
+        choice,
+        result: flip,
+        bet: betAmount,
+        won,
+      },
+      ...prev,
+    ]);
+
+    setFlipping(false);
+  }, 2000);
+}
 
   return (
     <main className="min-h-screen text-white flex justify-center py-10 px-4">
@@ -238,13 +250,13 @@ setStreak(0);
         Wallet Balance
       </p>
 
-      <h2 className="mt-2 text-5xl font-extrabold">
-        {balance}
-      </h2>
+      <h2 className="mt-2 text-4xl font-extrabold">
+  {connected ? balance : "—"}
+</h2>
 
-      <p className="text-lg opacity-90">
-        Test UCT
-      </p>
+<p className="text-lg opacity-90">
+  {connected ? "Game Points" : "Connect wallet to view balance"}
+</p>
     </div>
 
     <div className="text-right">
@@ -353,7 +365,6 @@ setStreak(0);
 
           <button
   onClick={() => {
-    setBalance(100);
     setWins(0);
     setLosses(0);
     setHistory([]);
@@ -476,7 +487,7 @@ setStreak(0);
       </p>
 
       <p className="text-sm text-gray-400">
-        Bet {game.bet} Test UCT
+        Bet {game.bet} game points
       </p>
 
     </div>
