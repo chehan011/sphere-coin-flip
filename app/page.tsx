@@ -108,6 +108,7 @@ async function connectWallet() {
   }
 }
 
+
 async function disconnectWallet() {
   setLoadingWallet(true);
 
@@ -116,7 +117,6 @@ async function disconnectWallet() {
 
     setConnected(false);
     setWalletAddress("");
-    setBalance(100);
 
   } catch (err) {
     console.error(err);
@@ -125,6 +125,7 @@ async function disconnectWallet() {
     setLoadingWallet(false);
   }
 }
+
 
 async function refreshBalance() {
   const sphere = await getSphere();
