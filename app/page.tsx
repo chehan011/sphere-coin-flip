@@ -15,6 +15,7 @@ type HistoryItem = {
   result: Choice;
   bet: number;
   won: boolean;
+  playedAt: string;
 };
 
 export default function Home() {
@@ -211,16 +212,17 @@ setBestStreak((best) =>
       );
     }
 
-    setHistory((prev) => [
-      {
-        id: Date.now(),
-        choice,
-        result: flip,
-        bet: betAmount,
-        won,
-      },
-      ...prev,
-    ]);
+setHistory((prev) => [
+  {
+    id: Date.now(),
+    choice,
+    result: flip,
+    bet: betAmount,
+    won,
+    playedAt: new Date().toISOString(),
+  },
+  ...prev,
+]);
 
     setFlipping(false);
   }, 2000);
@@ -293,7 +295,7 @@ const winRate =
 
     <div>
       <p className="text-sm opacity-80">
-        Wallet Balance
+        Game Points
       </p>
 
       <h2 className="mt-2 text-4xl font-extrabold">
@@ -553,8 +555,12 @@ onClick={() => {
       </p>
 
       <p className="text-sm text-gray-400">
-        Bet {game.bet} game points
-      </p>
+  Bet {game.bet} game points
+</p>
+
+<p className="text-xs text-gray-500 mt-1">
+  {new Date(game.playedAt).toLocaleString()}
+</p>
 
     </div>
 
