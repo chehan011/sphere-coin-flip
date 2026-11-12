@@ -35,6 +35,10 @@ export default function Home() {
   const [bestStreak, setBestStreak] = useState(0);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loadingWallet, setLoadingWallet] = useState(false);
+  const [dailyGames, setDailyGames] = useState(0);
+  const [dailyWins, setDailyWins] = useState(0);
+  const [claimedChallenges, setClaimedChallenges] = useState<string[]>([]);
+  const [dailyBestStreak, setDailyBestStreak] = useState(0);
 
 
 useEffect(() => {
@@ -51,6 +55,20 @@ useEffect(() => {
     setHistory(data.history ?? []);
     setStreak(data.streak ?? 0);
     setBestStreak(data.bestStreak ?? 0);
+
+    const today = new Date().toLocaleDateString();
+
+    if (data.challengeDate === today) {
+      setDailyBestStreak(data.dailyBestStreak ?? 0);
+      setDailyGames(data.dailyGames ?? 0);
+      setDailyWins(data.dailyWins ?? 0);
+      setClaimedChallenges(data.claimedChallenges ?? []);
+    } else {
+      setDailyBestStreak(0);
+      setDailyGames(0);
+      setDailyWins(0);
+      setClaimedChallenges([]);
+    }
   } catch (error) {
     console.error("Failed to load saved game data:", error);
   }
@@ -71,14 +89,30 @@ useEffect(() => {
     history,
     streak,
     bestStreak,
+
+    dailyGames,
+    dailyWins,
+    claimedChallenges,
+    dailyBestStreak,
+    challengeDate: new Date().toLocaleDateString(),
   };
 
   localStorage.setItem(
     "coinflip-data",
     JSON.stringify(gameData)
   );
-}, [balance, wins, losses, history, streak, bestStreak]);
-
+}, [
+  balance,
+  wins,
+  losses,
+  history,
+  streak,
+  bestStreak,
+  dailyGames,
+  dailyWins,
+  dailyBestStreak,
+  claimedChallenges,
+]);
 
 async function connectWallet() {
   setLoadingWallet(true);
@@ -137,9 +171,9 @@ function playGame() {
   if (flipping) return;
 
   if (!connected) {
-    alert("Please connect your Sphere wallet first.");
-    return;
-  }
+  alert("Please connect your Sphere wallet first.");
+  return;
+}
 
   if (!choice) {
     alert("Please choose Heads or Tails.");
@@ -179,6 +213,12 @@ function playGame() {
 
     const won = flip === choice;
 
+    setDailyGames((games) => games + 1);
+
+if (won) {
+  setDailyWins((wins) => wins + 1);
+}
+
     setCoin(flip === "Heads" ? "🙂" : "🦅");
 
     if (won) {
@@ -186,6 +226,9 @@ function playGame() {
       setWins((w) => w + 1);
 
       const nextStreak = streak + 1;
+      setDailyBestStreak((best) =>
+  Math.max(best, nextStreak)
+);
 
 setStreak(nextStreak);
 
@@ -233,6 +276,46 @@ const winRate =
   totalGames === 0
     ? 0
     : Math.round((wins / totalGames) * 100);
+
+    const challenges = [
+  {
+    id: "play5",
+    title: "Play 5 Games",
+    description: "Complete 5 coin flips",
+    target: 5,
+    progress: dailyGames,
+    reward: 20,
+  },
+  {
+    id: "win3",
+    title: "Win 3 Games",
+    description: "Win 3 coin flips today",
+    target: 3,
+    progress: dailyWins,
+    reward: 30,
+  },
+  {
+    id: "streak3",
+    title: "3-Win Streak",
+    description: "Win 3 games in a row",
+    target: 3,
+    progress: Math.min(dailyBestStreak, 3),
+    reward: 50,
+  },
+];
+
+function claimChallenge(id: string, reward: number) {
+  if (claimedChallenges.includes(id)) return;
+
+  setBalance((current) => current + reward);
+
+  setClaimedChallenges((previous) => [
+    ...previous,
+    id,
+  ]);
+
+  setMessage(`🎉 Challenge completed! +${reward} game points!`);
+}
 
   return (
     <main className="min-h-screen text-white flex justify-center py-10 px-4">
@@ -484,6 +567,86 @@ onClick={() => {
     <p className="text-3xl font-bold mt-2">{bestStreak}</p>
   </div>
 
+</div>
+
+<div className="bg-slate-900 rounded-xl p-6 mt-4">
+  <h2 className="text-xl font-bold mb-4">
+    🎯 Daily Challenges
+  </h2>
+
+  <div className="space-y-4">
+    {challenges.map((challenge) => {
+      const completed =
+        challenge.progress >= challenge.target;
+
+      const claimed =
+        claimedChallenges.includes(challenge.id);
+
+      return (
+        <div
+          key={challenge.id}
+          className="bg-slate-800 rounded-lg p-4"
+        >
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-bold">
+                {challenge.title}
+              </h3>
+
+              <p className="text-sm text-gray-400">
+                {challenge.description}
+              </p>
+            </div>
+
+            <span className="text-yellow-400 font-bold">
+              +{challenge.reward} points
+            </span>
+          </div>
+
+          <div className="mt-3 bg-slate-700 rounded-full h-2">
+            <div
+              className="bg-green-400 h-2 rounded-full"
+              style={{
+                width: `${Math.min(
+                  (challenge.progress / challenge.target) * 100,
+                  100
+                )}%`,
+              }}
+            />
+          </div>
+
+          <div className="flex justify-between items-center mt-3">
+            <span className="text-sm text-gray-400">
+              {Math.min(challenge.progress, challenge.target)}
+              /{challenge.target}
+            </span>
+
+            {claimed ? (
+              <span className="text-green-400 font-bold">
+                ✓ Claimed
+              </span>
+            ) : completed ? (
+              <button
+                onClick={() =>
+                  claimChallenge(
+                    challenge.id,
+                    challenge.reward
+                  )
+                }
+                className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg font-bold text-white"
+              >
+                Claim Reward
+              </button>
+            ) : (
+              <span className="text-gray-500 text-sm">
+                In Progress
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    })}
+  </div>
 </div>
 
 <div className="bg-slate-900 rounded-xl p-6 mt-4">
