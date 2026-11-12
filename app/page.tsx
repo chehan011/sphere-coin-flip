@@ -35,35 +35,48 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loadingWallet, setLoadingWallet] = useState(false);
 
-useEffect(() => {
-  const saved = localStorage.getItem("coinflip-data");
 
-  if (saved) {
+useEffect(() => {
+  try {
+    const saved = localStorage.getItem("coinflip-data");
+
+    if (!saved) return;
+
     const data = JSON.parse(saved);
 
     setBalance(data.balance ?? 100);
     setWins(data.wins ?? 0);
     setLosses(data.losses ?? 0);
     setHistory(data.history ?? []);
+    setStreak(data.streak ?? 0);
+    setBestStreak(data.bestStreak ?? 0);
+  } catch (error) {
+    console.error("Failed to load saved game data:", error);
   }
 }, []);
+
 
 useEffect(() => {
   flipSound.current = new Audio("/flip.mp3");
   winSound.current = new Audio("/win.mp3");
 }, []);
 
+
 useEffect(() => {
+  const gameData = {
+    balance,
+    wins,
+    losses,
+    history,
+    streak,
+    bestStreak,
+  };
+
   localStorage.setItem(
     "coinflip-data",
-    JSON.stringify({
-      balance,
-      wins,
-      losses,
-      history,
-    })
+    JSON.stringify(gameData)
   );
-}, [balance, wins, losses, history]);
+}, [balance, wins, losses, history, streak, bestStreak]);
 
 
 async function connectWallet() {
@@ -170,15 +183,13 @@ function playGame() {
       setBalance((b) => b + betAmount);
       setWins((w) => w + 1);
 
-      setStreak((s) => {
-        const next = s + 1;
+      const nextStreak = streak + 1;
 
-        setBestStreak((best) =>
-          Math.max(best, next)
-        );
+setStreak(nextStreak);
 
-        return next;
-      });
+setBestStreak((best) =>
+  Math.max(best, nextStreak)
+);
 
       if (winSound.current) {
         winSound.current.pause();
@@ -213,6 +224,12 @@ function playGame() {
     setFlipping(false);
   }, 2000);
 }
+const totalGames = wins + losses;
+
+const winRate =
+  totalGames === 0
+    ? 0
+    : Math.round((wins / totalGames) * 100);
 
   return (
     <main className="min-h-screen text-white flex justify-center py-10 px-4">
@@ -430,6 +447,21 @@ onClick={() => {
     <p className="text-3xl text-green-400 mt-2">{wins}</p>
   </div>
 
+<div className="mt-4 rounded-xl bg-slate-900 p-5 text-center">
+  <h3 className="text-lg font-bold">
+    🎮 Total Games
+  </h3>
+
+  <p className="mt-2 text-3xl font-bold text-cyan-400">
+    {totalGames}
+  </p>
+
+  <p className="mt-1 text-sm text-slate-400">
+    Games played
+  </p>
+</div>
+
+
   <div className="bg-slate-900 rounded-xl p-4">
     <h3 className="text-lg font-bold">Losses</h3>
     <p className="text-3xl text-red-400 mt-2">{losses}</p>
@@ -473,19 +505,21 @@ onClick={() => {
 
 </div>
 
-<div className="mt-4 rounded-xl bg-slate-900 p-4 text-center">
 
+<div className="mt-4 rounded-xl bg-slate-900 p-4 text-center">
   <h3 className="text-lg font-bold">
     Win Rate
   </h3>
 
-  <p className="mt-2 text-3xl text-cyan-400">
-    {wins + losses === 0
-      ? "0%"
-      : `${Math.round((wins / (wins + losses)) * 100)}%`}
+  <p className="mt-2 text-3xl font-bold text-cyan-400">
+    {winRate}%
   </p>
 
+  <p className="mt-1 text-sm text-slate-400">
+    {wins} wins out of {totalGames} games
+  </p>
 </div>
+
         </div>
 
         <div className="bg-slate-900 rounded-xl p-6 h-130 overflow-y-auto">
